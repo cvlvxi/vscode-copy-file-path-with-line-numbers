@@ -1,0 +1,86 @@
+{
+    "name": "copy-relative-path-and-line-numbers",
+    "displayName": "Copy Relative Path and Line Numbers",
+    "description": "Support multiple cursors. Accessible through right-clicking menu items in file explorer, tabs and main editor window.",
+    "version": "0.2.8",
+    "publisher": "ezforo",
+    "repository": {},
+    "icon": "images/icon.png",
+    "engines": {
+        "vscode": "^1.20.0"
+    },
+    "keywords": [
+        "copy",
+        "file path",
+        "line number",
+        "clipboard"
+    ],
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onCommand:copy-relative-path-and-line-numbers.both",
+        "onCommand:copy-relative-path-and-line-numbers.path-only"
+    ],
+    "main": "./extension",
+    "contributes": {
+        "keybindings": [
+            {
+                "command": "copy-relative-path-and-line-numbers.both",
+                "key": "alt+l",
+                "mac": "ctrl+l",
+                "when": "editorTextFocus"
+            }
+        ],
+        "commands": [
+            {
+                "command": "copy-relative-path-and-line-numbers.both",
+                "title": "Copy Relative Path and Line Numbers"
+            },
+            {
+                "command": "copy-relative-path-and-line-numbers.path-only",
+                "title": "Copy Relative Path"
+            }
+        ],
+        "menus": {
+            "explorer/context": [
+                {
+                    "command": "copy-relative-path-and-line-numbers.both"
+                },
+                {
+                    "command": "copy-relative-path-and-line-numbers.path-only"
+                }
+            ],
+            "editor/title/context": [
+                {
+                    "command": "copy-relative-path-and-line-numbers.both"
+                },
+                {
+                    "command": "copy-relative-path-and-line-numbers.path-only"
+                }
+            ],
+            "editor/context": [
+                {
+                    "command": "copy-relative-path-and-line-numbers.both"
+                },
+                {
+                    "command": "copy-relative-path-and-line-numbers.path-only"
+                }
+            ]
+        }
+    },
+    "scripts": {
+        "postinstall": "node ./node_modules/vscode/bin/install",
+        "test": "node ./node_modules/vscode/bin/test"
+    },
+    "devDependencies": {
+        "typescript": "^2.6.1",
+        "vscode": "^1.1.6",
+        "eslint": "^4.11.0",
+        "@types/node": "^7.0.43",
+        "@types/mocha": "^2.2.42"
+    },
+    "dependencies": {
+        "clipboardy": "^1.2.3"
+    }
+}
