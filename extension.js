@@ -7,14 +7,14 @@ const clipboardy = require('clipboardy');
 // your extension is activated the very first time the command is executed
 function activate(context) {
 
-    let copyPathLines = function(withLineNumber=false){
+    let copyPathLines = function(withLineNumber=false, withSelection=false){
         let alertMessage = "File path not found!";
         if(!vscode.workspace.rootPath) {
             vscode.window.showWarningMessage(alertMessage);
             return false;
         }
 
-        let editor = vscode.window.activeTextEditor;
+        let editor = vscode.window.activeTextEditor
         if (!editor) {
             vscode.window.showWarningMessage(alertMessage);
             return false;
@@ -29,19 +29,28 @@ function activate(context) {
         let path = vscode.workspace.asRelativePath(doc.fileName);
         let lineNumbers = [];
 
+        let pathRes = ""
+        let selectionText = ""
+
         if (withLineNumber) {
             editor.selections.forEach(selection => {
                 if (selection.isSingleLine) {
                     lineNumbers.push(selection.active.line + 1)
                 }else{
-                    lineNumbers.push((selection.start.line + 1) + '~' + (selection.end.line + 1))
+                    lineNumbers.push((selection.start.line + 1) + ':' + (selection.end.line + 1))
                 }
+                selectionText = editor.document.getText(selection)
+
             })
 
-            return path + ':' + lineNumbers.join(',');
+            pathRes = path + ':' + lineNumbers.join(',');
         }else{
-            return path;
+            pathRes = path;
         }
+        if (withSelection) {
+            pathRes += "\n\n```"+`\n${selectionText}\n` + "```"
+        }
+        return pathRes
     }
 
     let toast = function (message) {
@@ -63,6 +72,14 @@ function activate(context) {
             })
         }
     });
+    let cmdSelectionText = vscode.commands.registerCommand('copy-relative-path-and-line-numbers.withText', () => {
+        let message = copyPathLines(true, true);
+        if (message !== false) {
+            clipboardy.write(message).then(() => {
+                toast(message);
+            })
+        }
+    });
 
     let cmdPathOnly = vscode.commands.registerCommand('copy-relative-path-and-line-numbers.path-only', () => {
         let message = copyPathLines();
@@ -73,7 +90,7 @@ function activate(context) {
         }
     });
 
-    context.subscriptions.push(cmdBoth, cmdPathOnly);
+    context.subscriptions.push(cmdBoth, cmdPathOnly, cmdSelectionText);
 }
 exports.activate = activate;
 
