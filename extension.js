@@ -3,11 +3,17 @@
 const vscode = require('vscode');
 const clipboardy = require('clipboardy');
 
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 function activate(context) {
 
     let copyPathLines = function(withLineNumber=false, withSelection=false){
+        (vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', vscode.Uri.file(vscode.window.activeTextEditor.document.fileName)))
+            .then((symbols) => {
+
+        })
+
         let alertMessage = "File path not found!";
         if(!vscode.workspace.rootPath) {
             vscode.window.showWarningMessage(alertMessage);
@@ -34,21 +40,30 @@ function activate(context) {
 
         if (withLineNumber) {
             editor.selections.forEach(selection => {
+
                 if (selection.isSingleLine) {
+
                     lineNumbers.push(selection.active.line + 1)
-                }else{
+
+                } else {
+
                     lineNumbers.push((selection.start.line + 1) + ':' + (selection.end.line + 1))
+
                 }
                 selectionText = editor.document.getText(selection)
 
             })
 
-            pathRes = path + ':' + lineNumbers.join(',');
-        }else{
+            pathRes = "* [x] " + path + ':' + lineNumbers.join(',');
+        } else {
             pathRes = path;
         }
         if (withSelection) {
-            pathRes += "\n\n```"+`\n${selectionText}\n` + "```"
+            let language = ""
+            if (editor.document.languageId) {
+                language = editor.document.languageId
+            }
+            pathRes += "\n\n```"+language+`\n${selectionText}\n` + "```"
         }
         return pathRes
     }
