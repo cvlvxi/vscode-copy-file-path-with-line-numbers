@@ -54,7 +54,8 @@ function activate(context) {
 
             })
 
-            pathRes = "* [x] " + path + ':' + lineNumbers.join(',');
+            // pathRes = "* [x] " + path + ':' + lineNumbers.join(',');
+            pathRes = ""
         } else {
             pathRes = path;
         }
