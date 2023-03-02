@@ -9,3 +9,5 @@ Commands: `copy-relative-path-and-line-numbers.both` & `copy-relative-path-and-l
 Default shortcut key: `ctrl+l`(MacOS), `alt+l`(Windows/Linux)
 
 ![demo](https://www.dropbox.com/s/sh7edqqr2ciwc59/demo.gif?raw=1)
+
+
