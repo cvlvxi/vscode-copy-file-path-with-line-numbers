@@ -8,7 +8,7 @@ const clipboardy = require('clipboardy');
 // your extension is activated the very first time the command is executed
 function activate(context) {
 
-    let copyPathLines = function(withLineNumber=false, withSelection=false){
+    let copyPathLines = function(withLineNumber=false, withSelection=false, withPath=false){
         (vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', vscode.Uri.file(vscode.window.activeTextEditor.document.fileName)))
             .then((symbols) => {
 
@@ -53,11 +53,11 @@ function activate(context) {
                 selectionText = editor.document.getText(selection)
 
             })
-
-            // pathRes = "* [x] " + path + ':' + lineNumbers.join(',');
-            pathRes = ""
-        } else {
-            pathRes = path;
+            
+            // pathRes = ""
+        } 
+        if (withPath && withLineNumber) {
+            pathRes = "** " + path + ':' + lineNumbers.join(',') + " **";
         }
         if (withSelection) {
             let language = ""
@@ -89,7 +89,7 @@ function activate(context) {
         }
     });
     let cmdSelectionText = vscode.commands.registerCommand('copy-relative-path-and-line-numbers.withText', () => {
-        let message = copyPathLines(true, true);
+        let message = copyPathLines(true, true, true);
         if (message !== false) {
             clipboardy.write(message).then(() => {
                 toast(message);
