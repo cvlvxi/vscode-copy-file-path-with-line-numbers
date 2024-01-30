@@ -19,6 +19,7 @@
         "Other"
     ],
     "activationEvents": [
+        "onCommand:copy-relative-path-and-line-numbers.justFileLineNumber",
         "onCommand:copy-relative-path-and-line-numbers.both",
         "onCommand:copy-relative-path-and-line-numbers.path-only",
         "onCommand:copy-relative-path-and-line-numbers.withText"
@@ -28,6 +29,10 @@
         "keybindings": [
         ],
         "commands": [
+            {
+                "command": "copy-relative-path-and-line-numbers.justFileLineNumber",
+                "title": "Copy Relative Path and JUST File and Line Number"
+            },
             {
                 "command": "copy-relative-path-and-line-numbers.both",
                 "title": "Copy Relative Path and Line Numbers"
@@ -44,6 +49,9 @@
         "menus": {
             "explorer/context": [
                 {
+                    "command": "copy-relative-path-and-line-numbers.justFileLineNumber"
+                },
+                {
                     "command": "copy-relative-path-and-line-numbers.both"
                 },
                 {
@@ -55,6 +63,9 @@
             ],
             "editor/title/context": [
                 {
+                    "command": "copy-relative-path-and-line-numbers.justFileLineNumber"
+                },
+                {
                     "command": "copy-relative-path-and-line-numbers.both"
                 },
                 {
@@ -65,6 +76,9 @@
                 }
             ],
             "editor/context": [
+                {
+                    "command": "copy-relative-path-and-line-numbers.justFileLineNumber"
+                },
                 {
                     "command": "copy-relative-path-and-line-numbers.both"
                 },
@@ -85,7 +99,7 @@
         "typescript": "^2.6.1",
         "vscode": "^1.1.6",
         "eslint": "^4.11.0",
-        "@types/node": "^7.0.43",
+        "@types/node": "^14.18.63",
         "@types/mocha": "^2.2.42"
     },
     "dependencies": {
