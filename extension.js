@@ -56,12 +56,15 @@ function activate(context) {
             // pathRes = ""
         } 
         if (withPath && withLineNumber) {
-            pathRes = "**" + path + ':' + lineNumbers.join(',') + "**";
+            pathRes = path + ':' + lineNumbers.join(',');
         }
         if (withSelection) {
             let language = ""
             if (editor.document.languageId) {
                 language = editor.document.languageId
+                if (language === 'typescriptreact') {
+                    language = 'typescript';
+                }
             }
             pathRes += "\n\n```"+language+`\n${selectionText}\n` + "```"
         }
