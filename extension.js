@@ -9,7 +9,8 @@ function activate(context) {
   let copyPathLines = function (
     withLineNumber = false,
     withSelection = false,
-    withPath = false
+    withPath = false,
+    noCodeBlock = false
   ) {
     vscode.commands
       .executeCommand(
@@ -53,8 +54,6 @@ function activate(context) {
         }
         selectionText = editor.document.getText(selection);
       });
-
-      // pathRes = ""
     }
     if (withPath && withLineNumber) {
       pathRes = path + ":" + lineNumbers.join(",");
@@ -67,7 +66,17 @@ function activate(context) {
           language = "typescript";
         }
       }
-      pathRes += "\n\n```" + language + `\n${selectionText}\n` + "```";
+      pathRes += "\n\n"
+
+      if (!noCodeBlock) {
+        pathRes += "```" + language + "\n"
+      }
+
+      pathRes += `${selectionText}\n`
+
+      if (!noCodeBlock) {
+        pathRes += "```"
+      }
     }
     return pathRes;
   };
@@ -134,11 +143,24 @@ function activate(context) {
     }
   );
 
+  let cmdNoCodeBlock = vscode.commands.registerCommand(
+    "copy-relative-path-and-line-numbers.snippet",
+    () => {
+      let message = copyPathLines(true, true, true, true);
+      if (message !== false) {
+        clipboardy.write(message).then(() => {
+          toast(message);
+        });
+      }
+    }
+  );
+
   context.subscriptions.push(
     cmdFileOnlyLineNumber,
     cmdBoth,
     cmdPathOnly,
-    cmdSelectionText
+    cmdSelectionText,
+    cmdNoCodeBlock
   );
 }
 exports.activate = activate;
