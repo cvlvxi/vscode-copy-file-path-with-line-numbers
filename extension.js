@@ -126,6 +126,7 @@ function activate(context) {
       if (message !== false) {
         clipboardy.write(message).then(() => {
           toast(message);
+          vscode.window.showInformationMessage('Copied to clipboard (snippet+codeblock)');
         });
       }
     }
@@ -138,6 +139,7 @@ function activate(context) {
       if (message !== false) {
         clipboardy.write(message).then(() => {
           toast(message);
+          vscode.window.showInformationMessage('Copied to clipboard (pathonly)');
         });
       }
     }
@@ -150,6 +152,7 @@ function activate(context) {
       if (message !== false) {
         clipboardy.write(message).then(() => {
           toast(message);
+          vscode.window.showInformationMessage('Copied to clipboard (nocodeblock)');
         });
       }
     }
