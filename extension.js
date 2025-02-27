@@ -66,10 +66,12 @@ function activate(context) {
           language = "typescript";
         }
       }
+      // Update: 2025-02-28 to use Named Code Blocks
       pathRes += "\n\n"
 
       if (!noCodeBlock) {
-        pathRes += "```" + language + "\n"
+        // pathRes += "```" + language + "\n"
+        pathRes += "```" + language + ":" + path + "\n"
       }
 
       pathRes += `${selectionText}\n`
