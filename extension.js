@@ -71,7 +71,7 @@ function activate(context) {
 
       if (!noCodeBlock) {
         // pathRes += "```" + language + "\n"
-        pathRes += "```" + language + ":" + path + "\n"
+        pathRes = "```" + language + ":" + path + "\n"
       }
 
       pathRes += `${selectionText}\n`
