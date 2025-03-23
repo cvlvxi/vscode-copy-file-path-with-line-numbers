@@ -56,7 +56,8 @@ function activate(context) {
       });
     }
     if (withPath && withLineNumber) {
-      pathRes = path + ":" + lineNumbers.join(",");
+      // pathRes = path + ":" + lineNumbers.join(",");
+      pathRes = ""
     }
     if (withSelection) {
       let language = "";
@@ -67,7 +68,7 @@ function activate(context) {
         }
       }
       // Update: 2025-02-28 to use Named Code Blocks
-      pathRes += "\n\n"
+      // pathRes += "\n\n"
 
       if (!noCodeBlock) {
         // pathRes += "```" + language + "\n"
