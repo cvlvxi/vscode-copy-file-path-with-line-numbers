@@ -23,13 +23,18 @@
         "onCommand:copy-relative-path-and-line-numbers.both",
         "onCommand:copy-relative-path-and-line-numbers.path-only",
         "onCommand:copy-relative-path-and-line-numbers.withText",
-        "onCommand:copy-relative-path-and-line-numbers.snippet"
+        "onCommand:copy-relative-path-and-line-numbers.snippet",
+        "onCOmmand:copy-relative-path-and-line-numbers.simple-copy-line"
     ],
     "main": "./extension",
     "contributes": {
         "keybindings": [
         ],
         "commands": [
+            {
+                "command": "copy-relative-path-and-line-numbers.simple-copy-line",
+                "title": "Copy Relative Path SIMPLE COPY LINE"
+            },
             {
                 "command": "copy-relative-path-and-line-numbers.justFileLineNumber",
                 "title": "Copy Relative Path and JUST File and Line Number"
@@ -67,6 +72,9 @@
                 },
                 {
                     "command": "copy-relative-path-and-line-numbers.snippet"
+                },
+                {
+                    "command": "copy-relative-path-and-line-numbers.simple-copy-line"
                 }
             ],
             "editor/title/context": [
@@ -84,6 +92,9 @@
                 },
                 {
                     "command": "copy-relative-path-and-line-numbers.snippet"
+                },
+                {
+                    "command": "copy-relative-path-and-line-numbers.simple-copy-line"
                 }
             ],
             "editor/context": [
@@ -101,6 +112,9 @@
                 },
                 {
                     "command": "copy-relative-path-and-line-numbers.snippet"
+                },
+                {
+                    "command": "copy-relative-path-and-line-numbers.simple-copy-line"
                 }
             ]
         }

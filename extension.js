@@ -6,6 +6,23 @@ const clipboardy = require("clipboardy");
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 function activate(context) {
+  let copySimpleLine = function() {
+    let editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      return false;
+    }
+    let doc = editor.document;
+    if (doc.isUntitled) {
+      return false;
+    }
+    let path = vscode.workspace.asRelativePath(doc.fileName);
+    let currentLine = editor.selection.active.line; // This is 0-indexed
+    let currentLineNumber = currentLine + 1; // This is 1-indexed (human readable)
+    let lineText = editor.document.lineAt(currentLine).text.trim();
+    const copyString = `${path}:${currentLineNumber} | \`${lineText}\``;
+    return copyString
+  };
+
   let copyPathLines = function (
     withLineNumber = false,
     withSelection = false,
@@ -161,12 +178,26 @@ function activate(context) {
     }
   );
 
+  let cmdSimpleCopyLine = vscode.commands.registerCommand(
+    "copy-relative-path-and-line-numbers.simple-copy-line",
+    () => {
+      let message = copySimpleLine();
+      if (message !== false) {
+        clipboardy.write(message).then(() => {
+          toast(message);
+          vscode.window.showInformationMessage('Copied to clipboard (Simple Copy Line)');
+        });
+      }
+    }
+  );
+
   context.subscriptions.push(
     cmdFileOnlyLineNumber,
     cmdBoth,
     cmdPathOnly,
     cmdSelectionText,
-    cmdNoCodeBlock
+    cmdNoCodeBlock,
+    cmdSimpleCopyLine
   );
 }
 exports.activate = activate;
