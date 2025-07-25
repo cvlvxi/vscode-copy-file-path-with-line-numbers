@@ -124,7 +124,7 @@ function activate(context) {
       let message = copyPathLines(true, false, true);
       if (message !== false) {
         clipboardy.write(message).then(() => {
-          toast(message);
+          // toast(message);
         });
       }
     }
@@ -135,7 +135,7 @@ function activate(context) {
       let message = copyPathLines(true);
       if (message !== false) {
         clipboardy.write(message).then(() => {
-          toast(message);
+          // toast(message);
         });
       }
     }
@@ -146,8 +146,8 @@ function activate(context) {
       let message = copyPathLines(true, true, true);
       if (message !== false) {
         clipboardy.write(message).then(() => {
-          toast(message);
-          vscode.window.showInformationMessage('Copied to clipboard (snippet+codeblock)');
+          // toast(message);
+          // vscode.window.showInformationMessage('Copied to clipboard (snippet+codeblock)');
         });
       }
     }
@@ -159,8 +159,8 @@ function activate(context) {
       let message = copyPathLines();
       if (message !== false) {
         clipboardy.write(message).then(() => {
-          toast(message);
-          vscode.window.showInformationMessage('Copied to clipboard (pathonly)');
+          // toast(message);
+          // vscode.window.showInformationMessage('Copied to clipboard (pathonly)');
         });
       }
     }
@@ -172,8 +172,8 @@ function activate(context) {
       let message = copyPathLines(true, true, true, true);
       if (message !== false) {
         clipboardy.write(message).then(() => {
-          toast(message);
-          vscode.window.showInformationMessage('Copied to clipboard (nocodeblock)');
+          // toast(message);
+          // vscode.window.showInformationMessage('Copied to clipboard (nocodeblock)');
         });
       }
     }
@@ -185,8 +185,8 @@ function activate(context) {
       let message = copySimpleLine();
       if (message !== false) {
         clipboardy.write(message).then(() => {
-          toast(message);
-          vscode.window.showInformationMessage('Copied to clipboard (Simple Copy Line)');
+          // toast(message);
+          // vscode.window.showInformationMessage('Copied to clipboard (Simple Copy Line)');
         });
       }
     }
