@@ -19,7 +19,7 @@ function activate(context) {
     let currentLine = editor.selection.active.line; // This is 0-indexed
     let currentLineNumber = currentLine + 1; // This is 1-indexed (human readable)
     let lineText = editor.document.lineAt(currentLine).text.trim();
-    let copyString = `${path}:${currentLineNumber}\n`
+    let copyString = `[${path}:${currentLineNumber}]\n`
     copyString += ` - \`${lineText}\`\n`;
     return copyString
   };
