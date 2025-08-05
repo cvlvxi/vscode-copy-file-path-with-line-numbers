@@ -1,5 +1,9 @@
 yarn;
 yarn postinstall;
 vsce package;
-code --install-extension copy-relative-path-and*.vsix --force;
+if [ -z "$1" ]; then
+    code --install-extension copy-relative-path-and*.vsix --force;
+else
+    code-insiders --install-extension copy-relative-path-and*.vsix --force;
+fi
 
