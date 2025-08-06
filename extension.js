@@ -6,7 +6,7 @@ const clipboardy = require("clipboardy");
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 function activate(context) {
-  let copySimpleLine = function() {
+  let copySimpleLine = function () {
     let editor = vscode.window.activeTextEditor;
     if (!editor) {
       return false;
@@ -34,7 +34,7 @@ function activate(context) {
         "vscode.executeDocumentSymbolProvider",
         vscode.Uri.file(vscode.window.activeTextEditor.document.fileName)
       )
-      .then((symbols) => {});
+      .then((symbols) => { });
 
     let alertMessage = "File path not found!";
     if (!vscode.workspace.rootPath) {
@@ -191,17 +191,63 @@ function activate(context) {
     }
   );
 
+
+  let cmdCopyAndSaveSnippet= vscode.commands.registerCommand(
+    "copy-relative-path-and-line-numbers.copyAndSaveSnippet",
+    async () => {
+      let message = copyPathLines(true, true, true);
+      if (message !== false) {
+        // Get the last saved folder from global state
+        const lastSavedFolder = context.globalState.get('lastSavedFolder');
+        
+        // Create default URI - use last saved folder if available, otherwise use 'snippet.md'
+        let defaultUri;
+        if (lastSavedFolder) {
+          defaultUri = vscode.Uri.joinPath(vscode.Uri.file(lastSavedFolder), 'snippet.md');
+        } else {
+          defaultUri = vscode.Uri.file('snippet.md');
+        }
+
+        // Open save dialog
+        const saveUri = await vscode.window.showSaveDialog({
+          defaultUri: defaultUri,
+          filters: {
+            'Markdown files': ['md'],
+            'Text files': ['txt'],
+            'All files': ['*']
+          }
+        });
+
+        if (saveUri) {
+          try {
+            // Write the message to the selected file
+            await vscode.workspace.fs.writeFile(saveUri, Buffer.from(message, 'utf8'));
+            
+            // Store the folder path for next time
+            const folderPath = vscode.Uri.joinPath(saveUri, '..').fsPath;
+            await context.globalState.update('lastSavedFolder', folderPath);
+            
+            vscode.window.showInformationMessage(`Snippet saved to ${saveUri.fsPath}`);
+          } catch (error) {
+            vscode.window.showErrorMessage(`Failed to save file: ${error.message}`);
+          }
+        }
+      }
+    }
+  );
+
   context.subscriptions.push(
     cmdFileOnlyLineNumber,
     cmdBoth,
     cmdPathOnly,
     cmdSelectionText,
     cmdNoCodeBlock,
-    cmdSimpleCopyLine
+    cmdSimpleCopyLine,
+    cmdCopyAndSaveSnippet
   );
 }
 exports.activate = activate;
 
 // this method is called when your extension is deactivated
-function deactivate() {}
+function deactivate() { }
 exports.deactivate = deactivate;

@@ -32,6 +32,10 @@
         ],
         "commands": [
             {
+                "command": "copy-relative-path-and-line-numbers.copyAndSaveSnippet",
+                "title": "Copy and save to file"
+            },
+            {
                 "command": "copy-relative-path-and-line-numbers.simple-copy-line",
                 "title": "Copy Relative Path SIMPLE COPY LINE"
             },
