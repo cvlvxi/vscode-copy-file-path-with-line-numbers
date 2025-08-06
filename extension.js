@@ -204,11 +204,14 @@ function activate(context) {
         // Create the header with full path and add it before the snippet
         let fileContent = `# Snippet\n\n## Source\n\n[${fullPath}]\n\n${message}`;
 
+        // Get the last inputted filename from global state
+        const lastFileName = context.globalState.get('lastSnippetFileName', 'snippet');
+
         // Prompt user for filename
         const userFileName = await vscode.window.showInputBox({
           prompt: 'Enter filename for the snippet',
           placeHolder: 'snippet.md',
-          value: 'snippet'
+          value: lastFileName
         });
 
         // If user cancelled the input, return early
@@ -222,15 +225,51 @@ function activate(context) {
           fileName += '.md';
         }
 
+        // Store the entered filename (without .md) for next time
+        const fileNameWithoutExt = fileName.replace(/\.md$/, '');
+        await context.globalState.update('lastSnippetFileName', fileNameWithoutExt);
+
         // Get the last saved folder from global state
         const lastSavedFolder = context.globalState.get('lastSavedFolder');
+
+        // Determine the directory to check for existing files
+        let directoryToCheck;
+        if (lastSavedFolder) {
+          directoryToCheck = lastSavedFolder;
+        } else {
+          directoryToCheck = process.cwd(); // Current working directory
+        }
+
+        // Function to check if file exists and generate unique name
+        const generateUniqueFileName = async (baseName, directory) => {
+          const nameWithoutExt = baseName.replace(/\.md$/, '');
+          let counter = 1;
+          let testFileName = baseName;
+          
+          while (true) {
+            try {
+              const testPath = vscode.Uri.joinPath(vscode.Uri.file(directory), testFileName);
+              await vscode.workspace.fs.stat(testPath);
+              // File exists, try next number
+              const paddedCounter = counter.toString().padStart(2, '0');
+              testFileName = `${paddedCounter}_${nameWithoutExt}.md`;
+              counter++;
+            } catch (error) {
+              // File doesn't exist, we can use this name
+              return testFileName;
+            }
+          }
+        };
+
+        // Get unique filename
+        const uniqueFileName = await generateUniqueFileName(fileName, directoryToCheck);
 
         // Create default URI - use last saved folder if available, otherwise use current directory
         let defaultUri;
         if (lastSavedFolder) {
-          defaultUri = vscode.Uri.joinPath(vscode.Uri.file(lastSavedFolder), fileName);
+          defaultUri = vscode.Uri.joinPath(vscode.Uri.file(lastSavedFolder), uniqueFileName);
         } else {
-          defaultUri = vscode.Uri.file(fileName);
+          defaultUri = vscode.Uri.file(uniqueFileName);
         }
 
         // Open save dialog
