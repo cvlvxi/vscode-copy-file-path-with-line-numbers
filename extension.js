@@ -192,14 +192,21 @@ function activate(context) {
   );
 
 
-  let cmdCopyAndSaveSnippet= vscode.commands.registerCommand(
+  let cmdCopyAndSaveSnippet = vscode.commands.registerCommand(
     "copy-relative-path-and-line-numbers.copyAndSaveSnippet",
     async () => {
       let message = copyPathLines(true, true, true);
       if (message !== false) {
+        // Get the current file's full path
+        let editor = vscode.window.activeTextEditor;
+        let fullPath = editor.document.fileName;
+
+        // Create the header with full path and add it before the snippet
+        let fileContent = `# Snippet\n\n## Source\n\n[${fullPath}]\n\n${message}`;
+
         // Get the last saved folder from global state
         const lastSavedFolder = context.globalState.get('lastSavedFolder');
-        
+
         // Create default URI - use last saved folder if available, otherwise use 'snippet.md'
         let defaultUri;
         if (lastSavedFolder) {
@@ -220,13 +227,34 @@ function activate(context) {
 
         if (saveUri) {
           try {
-            // Write the message to the selected file
-            await vscode.workspace.fs.writeFile(saveUri, Buffer.from(message, 'utf8'));
-            
+            // Check if file exists and read existing content
+            let existingContent = '';
+            try {
+              const existingFile = await vscode.workspace.fs.readFile(saveUri);
+              existingContent = Buffer.from(existingFile).toString('utf8');
+            } catch (error) {
+              // File doesn't exist, that's fine - we'll create it
+            }
+
+            // If file exists, append with 2 newlines; otherwise use the full content
+            let finalContent;
+            if (existingContent.length > 0) {
+              finalContent = existingContent + '\n\n' + fileContent;
+            } else {
+              finalContent = fileContent;
+            }
+
+            // Write the final content to the selected file
+            await vscode.workspace.fs.writeFile(saveUri, Buffer.from(finalContent, 'utf8'));
+
             // Store the folder path for next time
             const folderPath = vscode.Uri.joinPath(saveUri, '..').fsPath;
             await context.globalState.update('lastSavedFolder', folderPath);
-            
+
+            // Open the saved file in VS Code
+            const document = await vscode.workspace.openTextDocument(saveUri);
+            await vscode.window.showTextDocument(document);
+
             vscode.window.showInformationMessage(`Snippet saved to ${saveUri.fsPath}`);
           } catch (error) {
             vscode.window.showErrorMessage(`Failed to save file: ${error.message}`);
