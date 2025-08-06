@@ -88,8 +88,9 @@ function activate(context) {
       // pathRes += "\n\n"
 
       if (!noCodeBlock) {
+        pathRes += `## Reference\n\n${path}\n\n`;
         // pathRes += "```" + language + "\n"
-        pathRes += "```" + language + ":" + path + "\n"
+        pathRes += "```" + language + "\n";
       }
 
       pathRes += `${selectionText}\n`
@@ -202,7 +203,7 @@ function activate(context) {
         let fullPath = editor.document.fileName;
 
         // Create the header with full path and add it before the snippet
-        let fileContent = `# Snippet\n\n## Source\n\n[${fullPath}]\n\n${message}`;
+        let fileContent = `# Snippet\n\n## Description \n\nFIXME\n\n## Source\n\n${fullPath}\n\n${message}`;
 
         // Get the last inputted filename from global state
         const lastFileName = context.globalState.get('lastSnippetFileName', 'snippet');
