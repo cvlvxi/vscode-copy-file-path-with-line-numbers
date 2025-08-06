@@ -204,15 +204,33 @@ function activate(context) {
         // Create the header with full path and add it before the snippet
         let fileContent = `# Snippet\n\n## Source\n\n[${fullPath}]\n\n${message}`;
 
+        // Prompt user for filename
+        const userFileName = await vscode.window.showInputBox({
+          prompt: 'Enter filename for the snippet',
+          placeHolder: 'snippet.md',
+          value: 'snippet'
+        });
+
+        // If user cancelled the input, return early
+        if (userFileName === undefined) {
+          return;
+        }
+
+        // Add .md extension if not present
+        let fileName = userFileName.trim();
+        if (!fileName.endsWith('.md')) {
+          fileName += '.md';
+        }
+
         // Get the last saved folder from global state
         const lastSavedFolder = context.globalState.get('lastSavedFolder');
 
-        // Create default URI - use last saved folder if available, otherwise use 'snippet.md'
+        // Create default URI - use last saved folder if available, otherwise use current directory
         let defaultUri;
         if (lastSavedFolder) {
-          defaultUri = vscode.Uri.joinPath(vscode.Uri.file(lastSavedFolder), 'snippet.md');
+          defaultUri = vscode.Uri.joinPath(vscode.Uri.file(lastSavedFolder), fileName);
         } else {
-          defaultUri = vscode.Uri.file('snippet.md');
+          defaultUri = vscode.Uri.file(fileName);
         }
 
         // Open save dialog
