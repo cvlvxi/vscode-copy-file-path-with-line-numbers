@@ -88,7 +88,7 @@ function activate(context) {
       // pathRes += "\n\n"
 
       if (!noCodeBlock) {
-        pathRes += `## Reference\n\n${path}\n\n`;
+        pathRes += `\n${path}\n\n`;
         // pathRes += "```" + language + "\n"
         pathRes += "```" + language + "\n";
       }
