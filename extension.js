@@ -15,7 +15,10 @@ function activate(context) {
     if (doc.isUntitled) {
       return false;
     }
-    let path = vscode.workspace.asRelativePath(doc.fileName);
+    let workspaceFolder = vscode.workspace.getWorkspaceFolder(doc.uri);
+    let workspaceName = workspaceFolder ? workspaceFolder.name : '';
+    let relativePath = vscode.workspace.asRelativePath(doc.fileName);
+    let path = workspaceName ? `${workspaceName}/${relativePath}` : relativePath;
     let currentLine = editor.selection.active.line; // This is 0-indexed
     let currentLineNumber = currentLine + 1; // This is 1-indexed (human readable)
     let lineText = editor.document.lineAt(currentLine).text.trim();
@@ -27,7 +30,8 @@ function activate(context) {
     withLineNumber = false,
     withSelection = false,
     withPath = false,
-    noCodeBlock = false
+    noCodeBlock = false,
+    addHeader = false
   ) {
     vscode.commands
       .executeCommand(
@@ -54,7 +58,10 @@ function activate(context) {
       return false;
     }
 
-    let path = vscode.workspace.asRelativePath(doc.fileName);
+    let workspaceFolder = vscode.workspace.getWorkspaceFolder(doc.uri);
+    let workspaceName = workspaceFolder ? workspaceFolder.name : '';
+    let relativePath = vscode.workspace.asRelativePath(doc.fileName);
+    let path = workspaceName ? `${workspaceName}/${relativePath}` : relativePath;
     let lineNumbers = [];
 
     let pathRes = "";
@@ -72,9 +79,19 @@ function activate(context) {
         selectionText = editor.document.getText(selection);
       });
     }
-    if (withPath && withLineNumber) {
-      // pathRes = path + ":" + lineNumbers.join(",");
-      pathRes = ""
+    if (withPath) {
+      if (addHeader) {
+        pathRes = `# ${path}`;
+      } else {
+        pathRes = path
+      }
+    }
+    if (withLineNumber) {
+      pathRes += ":" + lineNumbers.join(",");
+    }
+
+    if (withPath) {
+      pathRes += "\n\n";
     }
     if (withSelection) {
       let language = "";
@@ -84,15 +101,10 @@ function activate(context) {
           language = "typescript";
         }
       }
-      // Update: 2025-02-28 to use Named Code Blocks
-      // pathRes += "\n\n"
 
       if (!noCodeBlock) {
-        pathRes += `\n${path}\n\n`;
-        // pathRes += "```" + language + "\n"
         pathRes += "```" + language + "\n";
       }
-
       pathRes += `${selectionText}\n`
 
       if (!noCodeBlock) {
@@ -196,127 +208,147 @@ function activate(context) {
   let cmdCopyAndSaveSnippet = vscode.commands.registerCommand(
     "copy-relative-path-and-line-numbers.copyAndSaveSnippet",
     async () => {
-      let message = copyPathLines(true, true, true);
+      let message = copyPathLines(true, true, true, false, true);
       if (message !== false) {
-        // Get the current file's full path
         let editor = vscode.window.activeTextEditor;
         let fullPath = editor.document.fileName;
 
-        // Create the header with full path and add it before the snippet
-        let fileContent = `# Snippet\n\n## Description \n\nFIXME\n\n## Source\n\n${fullPath}\n\n${message}`;
+        // Get workspace folder and relative path
+        const workspaceFolder = vscode.workspace.getWorkspaceFolder(editor.document.uri);
+        if (!workspaceFolder) {
+          vscode.window.showErrorMessage("Workspace folder not found.");
+          return;
+        }
+        const workspaceName = workspaceFolder.name;
+        const relativePath = vscode.workspace.asRelativePath(fullPath, false);
 
-        // Get the last inputted filename from global state
-        const lastFileName = context.globalState.get('lastSnippetFileName', 'snippet');
+        // Get config directory
+        const configDir = vscode.workspace.getConfiguration().get('copyRelativePathAndLineNumbers.snippetSaveDirectory') || '';
+        let defaultFileName = `${workspaceName}/${relativePath.replace(/\.[^/.]+$/, ".md")}`;
+        if (configDir) {
+          defaultFileName = `${configDir}/${relativePath.replace(/\.[^/.]+$/, ".md")}`;
+        }
 
-        // Prompt user for filename
+        // Prompt user for filename (default to defaultFileName)
         const userFileName = await vscode.window.showInputBox({
           prompt: 'Enter filename for the snippet',
-          placeHolder: 'snippet.md',
-          value: lastFileName
+          placeHolder: defaultFileName,
+          value: defaultFileName
         });
 
-        // If user cancelled the input, return early
         if (userFileName === undefined) {
           return;
         }
 
-        // Add .md extension if not present
+        // Ensure .md extension
         let fileName = userFileName.trim();
         if (!fileName.endsWith('.md')) {
           fileName += '.md';
         }
 
-        // Store the entered filename (without .md) for next time
-        const fileNameWithoutExt = fileName.replace(/\.md$/, '');
-        await context.globalState.update('lastSnippetFileName', fileNameWithoutExt);
+        // Check for subdirectory in filename
+        const hasSubdir = fileName.includes('/') || fileName.includes('\\');
+        let saveUri;
 
-        // Get the last saved folder from global state
-        const lastSavedFolder = context.globalState.get('lastSavedFolder');
+        if (hasSubdir) {
+          const subDir = fileName.substring(0, fileName.lastIndexOf('/'));
+          const confirm = await vscode.window.showQuickPick(
+            ['Yes', 'No'],
+            { placeHolder: `Create subdirectory "${subDir}"?` }
+          );
+          if (confirm !== 'Yes') {
+            return;
+          }
 
-        // Determine the directory to check for existing files
-        let directoryToCheck;
-        if (lastSavedFolder) {
-          directoryToCheck = lastSavedFolder;
-        } else {
-          directoryToCheck = process.cwd(); // Current working directory
-        }
+          // Pick base folder (default to last used or workspace root)
+          let lastDir = context.globalState.get('copyRelativePathAndLineNumbers.lastSnippetDir', '');
+          let folderUri;
+          if (lastDir) {
+            folderUri = vscode.Uri.file(lastDir);
+          } else {
+            folderUri = workspaceFolder.uri;
+          }
+          const pickedFolder = await vscode.window.showOpenDialog({
+            defaultUri: folderUri,
+            canSelectFolders: true,
+            canSelectFiles: false,
+            openLabel: 'Select base folder for snippet'
+          });
+          if (!pickedFolder || pickedFolder.length === 0) {
+            return;
+          }
+          let baseFolderUri = pickedFolder[0];
 
-        // Function to check if file exists and generate unique name
-        const generateUniqueFileName = async (baseName, directory) => {
-          const nameWithoutExt = baseName.replace(/\.md$/, '');
-          let counter = 1;
-          let testFileName = baseName;
-          
-          while (true) {
+          // If the selected folder matches the first part of the subDir, skip it
+          const subDirParts = subDir.split('/');
+          const selectedFolderName = baseFolderUri.fsPath.split('/').pop();
+          let subDirToCreate = subDir;
+          if (selectedFolderName === subDirParts[0]) {
+            // Remove the first part
+            subDirToCreate = subDirParts.slice(1).join('/');
+          }
+
+          let targetDirUri = baseFolderUri;
+          if (subDirToCreate) {
+            targetDirUri = vscode.Uri.joinPath(baseFolderUri, subDirToCreate);
             try {
-              const testPath = vscode.Uri.joinPath(vscode.Uri.file(directory), testFileName);
-              await vscode.workspace.fs.stat(testPath);
-              // File exists, try next number
-              const paddedCounter = counter.toString().padStart(2, '0');
-              testFileName = `${paddedCounter}_${nameWithoutExt}.md`;
-              counter++;
-            } catch (error) {
-              // File doesn't exist, we can use this name
-              return testFileName;
+              await vscode.workspace.fs.createDirectory(targetDirUri);
+            } catch (e) {
+              // Directory may already exist, ignore
             }
           }
-        };
 
-        // Get unique filename
-        const uniqueFileName = await generateUniqueFileName(fileName, directoryToCheck);
-
-        // Create default URI - use last saved folder if available, otherwise use current directory
-        let defaultUri;
-        if (lastSavedFolder) {
-          defaultUri = vscode.Uri.joinPath(vscode.Uri.file(lastSavedFolder), uniqueFileName);
+          // Save file in the created directory
+          saveUri = vscode.Uri.joinPath(targetDirUri, fileName.split('/').pop());
+          // Save last used directory
+          context.globalState.update('copyRelativePathAndLineNumbers.lastSnippetDir', targetDirUri.fsPath);
         } else {
-          defaultUri = vscode.Uri.file(uniqueFileName);
+          // No subdirectory, use last used or workspace root
+          let lastDir = context.globalState.get('copyRelativePathAndLineNumbers.lastSnippetDir', '');
+          let defaultUri;
+          if (lastDir) {
+            defaultUri = vscode.Uri.file(lastDir + '/' + fileName);
+          } else {
+            defaultUri = vscode.Uri.joinPath(workspaceFolder.uri, fileName);
+          }
+          saveUri = await vscode.window.showSaveDialog({
+            defaultUri: defaultUri,
+            saveLabel: 'Save Snippet'
+          });
+          if (!saveUri) {
+            return;
+          }
+          // Save last used directory
+          context.globalState.update('copyRelativePathAndLineNumbers.lastSnippetDir', saveUri.fsPath.replace(/\/[^\/]+$/, ''));
         }
 
-        // Open save dialog
-        const saveUri = await vscode.window.showSaveDialog({
-          defaultUri: defaultUri,
-          filters: {
-            'Markdown files': ['md'],
-            'Text files': ['txt'],
-            'All files': ['*']
-          }
-        });
+        let fileContent = `---\n\n${message}\n---\n\n`;
 
-        if (saveUri) {
+        try {
+          let existingContent = '';
           try {
-            // Check if file exists and read existing content
-            let existingContent = '';
-            try {
-              const existingFile = await vscode.workspace.fs.readFile(saveUri);
-              existingContent = Buffer.from(existingFile).toString('utf8');
-            } catch (error) {
-              // File doesn't exist, that's fine - we'll create it
-            }
-
-            // If file exists, append with 2 newlines; otherwise use the full content
-            let finalContent;
-            if (existingContent.length > 0) {
-              finalContent = existingContent + '\n\n' + fileContent;
-            } else {
-              finalContent = fileContent;
-            }
-
-            // Write the final content to the selected file
-            await vscode.workspace.fs.writeFile(saveUri, Buffer.from(finalContent, 'utf8'));
-
-            // Store the folder path for next time
-            const folderPath = vscode.Uri.joinPath(saveUri, '..').fsPath;
-            await context.globalState.update('lastSavedFolder', folderPath);
-
-            // Open the saved file in VS Code
-            const document = await vscode.workspace.openTextDocument(saveUri);
-            await vscode.window.showTextDocument(document);
-
-            vscode.window.showInformationMessage(`Snippet saved to ${saveUri.fsPath}`);
+            const existingFile = await vscode.workspace.fs.readFile(saveUri);
+            existingContent = Buffer.from(existingFile).toString('utf8');
           } catch (error) {
-            vscode.window.showErrorMessage(`Failed to save file: ${error.message}`);
+            // File doesn't exist, that's fine
           }
+
+          let finalContent;
+          if (existingContent.length > 0) {
+            finalContent = existingContent + '\n\n' + fileContent;
+          } else {
+            finalContent = fileContent;
+          }
+
+          await vscode.workspace.fs.writeFile(saveUri, Buffer.from(finalContent, 'utf8'));
+
+          // Open the saved file in VS Code
+          const document = await vscode.workspace.openTextDocument(saveUri);
+          await vscode.window.showTextDocument(document);
+
+          vscode.window.showInformationMessage(`Snippet saved to ${saveUri.fsPath}`);
+        } catch (error) {
+          vscode.window.showErrorMessage(`Failed to save file: ${error.message}`);
         }
       }
     }
