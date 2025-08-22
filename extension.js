@@ -222,105 +222,30 @@ function activate(context) {
         const workspaceName = workspaceFolder.name;
         const relativePath = vscode.workspace.asRelativePath(fullPath, false);
 
-        // Get config directory
-        const configDir = vscode.workspace.getConfiguration().get('copyRelativePathAndLineNumbers.snippetSaveDirectory') || '';
-        let defaultFileName = `${workspaceName}/${relativePath.replace(/\.[^/.]+$/, ".md")}`;
-        if (configDir) {
-          defaultFileName = `${configDir}/${relativePath.replace(/\.[^/.]+$/, ".md")}`;
-        }
+        // Trim relativePath to max 4 subdirectories
+        const relParts = relativePath.split('/');
+        const trimmedRelParts = relParts.slice(0, 4).concat(relParts.slice(4));
+        const trimmedRelPath = trimmedRelParts.join('/').replace(/\.[^/.]+$/, ".md");
 
-        // Prompt user for filename (default to defaultFileName)
-        const userFileName = await vscode.window.showInputBox({
-          prompt: 'Enter filename for the snippet',
-          placeHolder: defaultFileName,
-          value: defaultFileName
+        // Pick base folder (default to last used or workspace root)
+        let lastDir = context.globalState.get('copyRelativePathAndLineNumbers.lastSnippetDir', '');
+        let folderUri = lastDir ? vscode.Uri.file(lastDir) : workspaceFolder.uri;
+        const pickedFolder = await vscode.window.showOpenDialog({
+          defaultUri: folderUri,
+          canSelectFolders: true,
+          canSelectFiles: false,
+          openLabel: 'Select base folder for snippet'
         });
-
-        if (userFileName === undefined) {
+        if (!pickedFolder || pickedFolder.length === 0) {
           return;
         }
+        let baseFolderUri = pickedFolder[0];
 
-        // Ensure .md extension
-        let fileName = userFileName.trim();
-        if (!fileName.endsWith('.md')) {
-          fileName += '.md';
-        }
+        // Save file as lastDir/workspaceName/path/to/file.md
+        const saveUri = vscode.Uri.joinPath(baseFolderUri, workspaceName, trimmedRelPath);
 
-        // Check for subdirectory in filename
-        const hasSubdir = fileName.includes('/') || fileName.includes('\\');
-        let saveUri;
-
-        if (hasSubdir) {
-          const subDir = fileName.substring(0, fileName.lastIndexOf('/'));
-          const confirm = await vscode.window.showQuickPick(
-            ['Yes', 'No'],
-            { placeHolder: `Create subdirectory "${subDir}"?` }
-          );
-          if (confirm !== 'Yes') {
-            return;
-          }
-
-          // Pick base folder (default to last used or workspace root)
-          let lastDir = context.globalState.get('copyRelativePathAndLineNumbers.lastSnippetDir', '');
-          let folderUri;
-          if (lastDir) {
-            folderUri = vscode.Uri.file(lastDir);
-          } else {
-            folderUri = workspaceFolder.uri;
-          }
-          const pickedFolder = await vscode.window.showOpenDialog({
-            defaultUri: folderUri,
-            canSelectFolders: true,
-            canSelectFiles: false,
-            openLabel: 'Select base folder for snippet'
-          });
-          if (!pickedFolder || pickedFolder.length === 0) {
-            return;
-          }
-          let baseFolderUri = pickedFolder[0];
-
-          // If the selected folder matches the first part of the subDir, skip it
-          const subDirParts = subDir.split('/');
-          const selectedFolderName = baseFolderUri.fsPath.split('/').pop();
-          let subDirToCreate = subDir;
-          if (selectedFolderName === subDirParts[0]) {
-            // Remove the first part
-            subDirToCreate = subDirParts.slice(1).join('/');
-          }
-
-          let targetDirUri = baseFolderUri;
-          if (subDirToCreate) {
-            targetDirUri = vscode.Uri.joinPath(baseFolderUri, subDirToCreate);
-            try {
-              await vscode.workspace.fs.createDirectory(targetDirUri);
-            } catch (e) {
-              // Directory may already exist, ignore
-            }
-          }
-
-          // Save file in the created directory
-          saveUri = vscode.Uri.joinPath(targetDirUri, fileName.split('/').pop());
-          // Save last used directory
-          context.globalState.update('copyRelativePathAndLineNumbers.lastSnippetDir', targetDirUri.fsPath);
-        } else {
-          // No subdirectory, use last used or workspace root
-          let lastDir = context.globalState.get('copyRelativePathAndLineNumbers.lastSnippetDir', '');
-          let defaultUri;
-          if (lastDir) {
-            defaultUri = vscode.Uri.file(lastDir + '/' + fileName);
-          } else {
-            defaultUri = vscode.Uri.joinPath(workspaceFolder.uri, fileName);
-          }
-          saveUri = await vscode.window.showSaveDialog({
-            defaultUri: defaultUri,
-            saveLabel: 'Save Snippet'
-          });
-          if (!saveUri) {
-            return;
-          }
-          // Save last used directory
-          context.globalState.update('copyRelativePathAndLineNumbers.lastSnippetDir', saveUri.fsPath.replace(/\/[^\/]+$/, ''));
-        }
+        // Save last used directory
+        context.globalState.update('copyRelativePathAndLineNumbers.lastSnippetDir', baseFolderUri.fsPath);
 
         let fileContent = `---\n\n${message}\n---\n\n`;
 
