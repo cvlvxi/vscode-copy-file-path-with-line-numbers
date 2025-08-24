@@ -219,7 +219,7 @@ function activate(context) {
           vscode.window.showErrorMessage("Workspace folder not found.");
           return;
         }
-        const workspaceName = workspaceFolder.name;
+        let workspaceName = workspaceFolder ? workspaceFolder.name.replace(/\s*\(.*?\)\s*/g, '') : '';
         const relativePath = vscode.workspace.asRelativePath(fullPath, false);
 
         // Trim relativePath to max 4 subdirectories
