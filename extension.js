@@ -225,7 +225,7 @@ function activate(context) {
         // Trim relativePath to max 4 subdirectories
         const relParts = relativePath.split('/');
         const trimmedRelParts = relParts.slice(0, 4).concat(relParts.slice(4));
-        const trimmedRelPath = trimmedRelParts.join('/').replace(/\.[^/.]+$/, ".md");
+        const trimmedRelPath = trimmedRelParts.join('/') + ".snip.md";
 
         // Pick base folder (default to last used or workspace root)
         let lastDir = context.globalState.get('copyRelativePathAndLineNumbers.lastSnippetDir', '');
