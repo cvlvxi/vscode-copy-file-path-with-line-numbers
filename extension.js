@@ -81,7 +81,7 @@ function activate(context) {
     }
     if (withPath) {
       if (addHeader) {
-        pathRes = `# ${path}`;
+        pathRes = `## ${path}`;
       } else {
         pathRes = path
       }
@@ -247,7 +247,7 @@ function activate(context) {
         // Save last used directory
         context.globalState.update('copyRelativePathAndLineNumbers.lastSnippetDir', baseFolderUri.fsPath);
 
-        let fileContent = `---\n\n${message}\n---\n\n`;
+        let fileContent = `${message}\n\n`;
 
         try {
           let existingContent = '';
