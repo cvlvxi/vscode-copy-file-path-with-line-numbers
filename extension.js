@@ -80,6 +80,7 @@ function activate(context) {
     pathRes = "\n";
     pathRes += "```" + language + "\n";
     pathRes += `${selectionText}\n`
+    pathRes += "```\n"
     return pathRes;
   };
 
