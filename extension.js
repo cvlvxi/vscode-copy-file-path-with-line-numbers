@@ -25,13 +25,71 @@ function activate(context) {
     let copyString = `- ${path}:${currentLineNumber}:\`${lineText}\`\n`
     return copyString
   };
+  let justCodeBlock= function () {
+    vscode.commands
+      .executeCommand(
+        "vscode.executeDocumentSymbolProvider",
+        vscode.Uri.file(vscode.window.activeTextEditor.document.fileName)
+      )
+      .then((symbols) => { });
+
+    let alertMessage = "File path not found!";
+    if (!vscode.workspace.rootPath) {
+      vscode.window.showWarningMessage(alertMessage);
+      return false;
+    }
+
+    let editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      vscode.window.showWarningMessage(alertMessage);
+      return false;
+    }
+
+    let doc = editor.document;
+    if (doc.isUntitled) {
+      vscode.window.showWarningMessage(alertMessage);
+      return false;
+    }
+
+    let workspaceFolder = vscode.workspace.getWorkspaceFolder(doc.uri);
+    let workspaceName = workspaceFolder ? workspaceFolder.name : '';
+    let relativePath = vscode.workspace.asRelativePath(doc.fileName);
+    let lineNumbers = [];
+
+    let pathRes = "";
+    let selectionText = "";
+
+    editor.selections.forEach((selection) => {
+      if (selection.isSingleLine) {
+        lineNumbers.push(selection.active.line + 1);
+      } else {
+        lineNumbers.push(
+          selection.start.line + 1 + ":" + (selection.end.line + 1)
+        );
+      }
+      selectionText = editor.document.getText(selection);
+    });
+
+    let language = "";
+    if (editor.document.languageId) {
+      language = editor.document.languageId;
+      if (language === "typescriptreact") {
+        language = "typescript";
+      }
+    }
+    pathRes = "\n";
+    pathRes += "```" + language + "\n";
+    pathRes += `${selectionText}\n`
+    return pathRes;
+  };
 
   let copyPathLines = function (
     withLineNumber = false,
     withSelection = false,
     withPath = false,
     noCodeBlock = false,
-    addHeader = false
+    addHeader = false,
+    justCodeBlock = false
   ) {
     vscode.commands
       .executeCommand(
@@ -178,6 +236,19 @@ function activate(context) {
     }
   );
 
+  let cmdJustCodeBlock= vscode.commands.registerCommand(
+    "copy-relative-path-and-line-numbers.justCodeBlock",
+    () => {
+      let message = justCodeBlock()
+      if (message !== false) {
+        clipboardy.write(message).then(() => {
+          // toast(message);
+          // vscode.window.showInformationMessage('Copied to clipboard (pathonly)');
+        });
+      }
+    }
+  );
+
   let cmdNoCodeBlock = vscode.commands.registerCommand(
     "copy-relative-path-and-line-numbers.snippet",
     () => {
@@ -286,7 +357,8 @@ function activate(context) {
     cmdSelectionText,
     cmdNoCodeBlock,
     cmdSimpleCopyLine,
-    cmdCopyAndSaveSnippet
+    cmdCopyAndSaveSnippet,
+    cmdJustCodeBlock
   );
 }
 exports.activate = activate;

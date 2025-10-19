@@ -58,6 +58,10 @@
             {
                 "command": "copy-relative-path-and-line-numbers.snippet",
                 "title": "Copy Relative Path and Snippet without Code Block"
+            },
+            {
+                "command": "copy-relative-path-and-line-numbers.justCodeBlock",
+                "title": "Copy Relative Path JUST CODE BLOCK"
             }
         ],
         "menus": {
