@@ -24,7 +24,8 @@
         "onCommand:copy-relative-path-and-line-numbers.path-only",
         "onCommand:copy-relative-path-and-line-numbers.withText",
         "onCommand:copy-relative-path-and-line-numbers.snippet",
-        "onCOmmand:copy-relative-path-and-line-numbers.simple-copy-line"
+        "onCommand:copy-relative-path-and-line-numbers.simple-copy-line",
+        "onCommand:copy-relative-path-and-line-numbers.simple-copy-line-without-file"
     ],
     "main": "./extension",
     "contributes": {
@@ -37,7 +38,11 @@
             },
             {
                 "command": "copy-relative-path-and-line-numbers.simple-copy-line",
-                "title": "Copy Relative Path SIMPLE COPY LINE"
+                "title": "Copy Relative Path SIMPLE COPY LINE WITH PATH"
+            },
+            {
+                "command": "copy-relative-path-and-line-numbers.simple-copy-line-without-file",
+                "title": "Copy Relative Path SIMPLE COPY LINE WITHOUT PATH"
             },
             {
                 "command": "copy-relative-path-and-line-numbers.justFileLineNumber",

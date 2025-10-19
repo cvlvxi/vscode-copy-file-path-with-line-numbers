@@ -6,7 +6,7 @@ const clipboardy = require("clipboardy");
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 function activate(context) {
-  let copySimpleLine = function () {
+  let copySimpleLine = function (withoutFile = false) {
     let editor = vscode.window.activeTextEditor;
     if (!editor) {
       return false;
@@ -23,8 +23,12 @@ function activate(context) {
     let currentLineNumber = currentLine + 1; // This is 1-indexed (human readable)
     let lineText = editor.document.lineAt(currentLine).text.trim();
     let copyString = `${path}:${currentLineNumber}:\`${lineText}\`\n`
+    if (withoutFile) {
+      copyString = `\`${lineText}\`\n`
+    }
     return copyString
   };
+
   let justCodeBlock= function () {
     vscode.commands
       .executeCommand(
@@ -276,6 +280,19 @@ function activate(context) {
     }
   );
 
+  let cmdSimpleCopyLineWithoutFile= vscode.commands.registerCommand(
+    "copy-relative-path-and-line-numbers.simple-copy-line-without-file",
+    () => {
+      let message = copySimpleLine(true);
+      if (message !== false) {
+        clipboardy.write(message).then(() => {
+          // toast(message);
+          // vscode.window.showInformationMessage('Copied to clipboard (Simple Copy Line)');
+        });
+      }
+    }
+  );
+
 
   let cmdCopyAndSaveSnippet = vscode.commands.registerCommand(
     "copy-relative-path-and-line-numbers.copyAndSaveSnippet",
@@ -358,6 +375,7 @@ function activate(context) {
     cmdSelectionText,
     cmdNoCodeBlock,
     cmdSimpleCopyLine,
+    cmdSimpleCopyLineWithoutFile,
     cmdCopyAndSaveSnippet,
     cmdJustCodeBlock
   );
