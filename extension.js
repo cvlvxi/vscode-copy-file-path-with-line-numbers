@@ -6,6 +6,14 @@ const clipboardy = require("clipboardy");
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 function activate(context) {
+  let deselectAfterCopy = function() {
+    let editor = vscode.window.activeTextEditor;
+    if (editor) {
+      // Set cursor to the start of the first selection
+      const newPosition = editor.selection.start;
+      editor.selection = new vscode.Selection(newPosition, newPosition);
+    }
+  };
   let copySimpleLine = function (withoutFile = false) {
     let editor = vscode.window.activeTextEditor;
     if (!editor) {
@@ -26,6 +34,7 @@ function activate(context) {
     if (withoutFile) {
       copyString = `\`${lineText}\`\n`
     }
+    deselectAfterCopy();
     return copyString
   };
 
@@ -201,6 +210,7 @@ function activate(context) {
         clipboardy.write(message).then(() => {
           // toast(message);
         });
+        deselectAfterCopy();
       }
     }
   );
@@ -212,6 +222,7 @@ function activate(context) {
         clipboardy.write(message).then(() => {
           // toast(message);
         });
+        deselectAfterCopy();
       }
     }
   );
@@ -224,6 +235,7 @@ function activate(context) {
           // toast(message);
           // vscode.window.showInformationMessage('Copied to clipboard (snippet+codeblock)');
         });
+        deselectAfterCopy();
       }
     }
   );
@@ -237,6 +249,7 @@ function activate(context) {
           // toast(message);
           // vscode.window.showInformationMessage('Copied to clipboard (pathonly)');
         });
+        deselectAfterCopy();
       }
     }
   );
@@ -250,6 +263,7 @@ function activate(context) {
           // toast(message);
           // vscode.window.showInformationMessage('Copied to clipboard (pathonly)');
         });
+        deselectAfterCopy();
       }
     }
   );
@@ -263,6 +277,7 @@ function activate(context) {
           // toast(message);
           // vscode.window.showInformationMessage('Copied to clipboard (nocodeblock)');
         });
+        deselectAfterCopy();
       }
     }
   );
@@ -276,6 +291,7 @@ function activate(context) {
           // toast(message);
           // vscode.window.showInformationMessage('Copied to clipboard (Simple Copy Line)');
         });
+        deselectAfterCopy();
       }
     }
   );
@@ -289,6 +305,7 @@ function activate(context) {
           // toast(message);
           // vscode.window.showInformationMessage('Copied to clipboard (Simple Copy Line)');
         });
+        deselectAfterCopy();
       }
     }
   );
