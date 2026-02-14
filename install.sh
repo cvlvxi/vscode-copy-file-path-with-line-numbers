@@ -1,9 +1,14 @@
 yarn;
 yarn postinstall;
 vsce package;
+
 if [ -z "$1" ]; then
-    code --install-extension copy-relative-path-and*.vsix --force;
+    code --install-extension *.vsix --force;
+elif [ "$1" = "insiders" ]; then
+    code-insiders --install-extension *.vsix --force;
+elif [ "$1" = "codium" ]; then
+    codium --install-extension *.vsix --force;
 else
-    code-insiders --install-extension copy-relative-path-and*.vsix --force;
+  echo "Invalid args specified"
 fi
 
